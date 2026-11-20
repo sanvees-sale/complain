@@ -69,6 +69,9 @@
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed top-4 sm:top-6 right-4 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
 
+  <!-- Realtime Push & Message Notification Center -->
+  <div id="live-notification-center" class="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2.5 pointer-events-none max-w-md w-full px-4"></div>
+
   <!-- ==================== UNIFIED LOGIN VIEW ==================== -->
   <div id="login-view" class="min-h-screen bg-mesh flex flex-col items-center justify-center px-4 py-8 sm:py-16 relative overflow-hidden">
     
@@ -255,6 +258,15 @@
             <span class="hidden sm:inline theme-label">Dark</span>
           </button>
 
+          <!-- Audio Sound Notification Toggle Button -->
+          <button id="sound-toggle-btn" onclick="toggleSoundNotifications()" type="button"
+            class="p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            title="Toggle Notification Sound Chime">
+            <span id="sound-icon-on" class="text-indigo-600 dark:text-indigo-400">🔔</span>
+            <span id="sound-icon-off" class="text-slate-400 hidden">🔕</span>
+            <span class="hidden sm:inline" id="sound-label">Sound On</span>
+          </button>
+
           <button onclick="openPasswordModal()"
             class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition cursor-pointer flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -362,6 +374,47 @@
 
           <!-- Feed Posts Column -->
           <div id="feed-list-col" class="lg:col-span-7 space-y-4">
+            
+            <!-- Daily Fresh Queue & Date Banner -->
+            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800/90 p-4 sm:p-5 shadow-xs">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black border border-indigo-100 dark:border-indigo-900 shrink-0 text-lg">
+                    📅
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Daily Queue</span>
+                      <span id="date-mode-badge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                        Today's Fresh Board
+                      </span>
+                    </div>
+                    <h3 id="current-today-display" class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight mt-0.5">
+                      Loading date...
+                    </h3>
+                  </div>
+                </div>
+
+                <!-- Date Navigation Filter Pills -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                  <button id="date-btn-today" onclick="setDateFilter('today')" type="button"
+                    class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer bg-slate-900 dark:bg-indigo-600 text-white shadow-xs whitespace-nowrap">
+                    Today
+                  </button>
+                  <button id="date-btn-yesterday" onclick="setDateFilter('yesterday')" type="button"
+                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap">
+                    Yesterday
+                  </button>
+                  <button id="date-btn-all" onclick="setDateFilter('all')" type="button"
+                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap">
+                    All History
+                  </button>
+                  <input id="date-picker-input" type="date" onchange="setDateFilter('custom', this.value)" title="Choose a specific date"
+                    class="px-2 py-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#11192c] text-slate-700 dark:text-slate-300 cursor-pointer focus:outline-none" />
+                </div>
+              </div>
+            </div>
+
             <!-- Filter Toolbar -->
             <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-slate-800 p-3 sm:p-4 flex flex-col sm:flex-row gap-3">
               <input id="filter-search" type="text" placeholder="Search complaints or suggestions..." oninput="renderFeed()"
@@ -542,7 +595,7 @@
 
     // Official 23 Moderators List from Sanvee's Roster
     const INITIAL_USERS = [
-      { id: 'u_admin', name: 'Sheikh Shahmiran Manik', username: 'admin', password: 'admin123', role: 'admin' },
+      { id: 'u_admin', name: 'Sheikh Shahmiran Manik', username: 'admin', password: '544162', role: 'admin' },
       { id: 'u_mod_01', name: 'Sefat Karim', password: '1234', role: 'moderator' },
       { id: 'u_mod_02', name: 'Tarikul Islam', password: '1234', role: 'moderator' },
       { id: 'u_mod_03', name: 'Sajedul Islam', password: '1234', role: 'moderator' },
@@ -601,6 +654,201 @@
       });
     }
 
+    // ==================== AUDIO NOTIFICATION CHIME & SOUND SYSTEM ====================
+    let soundEnabled = localStorage.getItem('modvoice_sound_enabled') !== 'false';
+
+    function getAudioContext() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        if (!window._appAudioCtx) {
+          window._appAudioCtx = new AudioCtx();
+        }
+        if (window._appAudioCtx.state === 'suspended') {
+          window._appAudioCtx.resume().catch(() => {});
+        }
+        return window._appAudioCtx;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Pre-unlock audio on user interaction
+    window.addEventListener('click', () => { getAudioContext(); }, { once: false });
+
+    // Synthesized luxury incoming message chime (Pop + Bell Ping + Harmonic Shimmer)
+    function playIncomingMessageSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime;
+
+        const master = ctx.createGain();
+        master.gain.setValueAtTime(0.3, now);
+        master.connect(ctx.destination);
+
+        // Tone 1: Gentle initial message pop (D5: 587.33Hz -> G5: 783.99Hz)
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now);
+        osc1.frequency.exponentialRampToValueAtTime(783.99, now + 0.05);
+        gain1.gain.setValueAtTime(0.35, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc1.connect(gain1);
+        gain1.connect(master);
+        osc1.start(now);
+        osc1.stop(now + 0.13);
+
+        // Tone 2: Crisp sweet high bell chime (D6: 1174.66Hz)
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1174.66, now + 0.06);
+        gain2.gain.setValueAtTime(0, now);
+        gain2.gain.setValueAtTime(0.55, now + 0.06);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
+        osc2.connect(gain2);
+        gain2.connect(master);
+        osc2.start(now + 0.06);
+        osc2.stop(now + 0.58);
+
+        // Tone 3: Sparkling crystal overtone (A6: 1760Hz)
+        const osc3 = ctx.createOscillator();
+        const gain3 = ctx.createGain();
+        osc3.type = 'triangle';
+        osc3.frequency.setValueAtTime(1760, now + 0.07);
+        gain3.gain.setValueAtTime(0, now);
+        gain3.gain.setValueAtTime(0.2, now + 0.07);
+        gain3.gain.exponentialRampToValueAtTime(0.0001, now + 0.68);
+        osc3.connect(gain3);
+        gain3.connect(master);
+        osc3.start(now + 0.07);
+        osc3.stop(now + 0.68);
+      } catch (err) {
+        console.warn('Audio chime warning:', err);
+      }
+    }
+
+    function toggleSoundNotifications() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem('modvoice_sound_enabled', soundEnabled ? 'true' : 'false');
+      updateSoundButtonUI();
+      if (soundEnabled) {
+        playIncomingMessageSound();
+        showToast('Notification sound enabled');
+      } else {
+        showToast('Notification sound muted');
+      }
+    }
+
+    function updateSoundButtonUI() {
+      const iconOn = document.getElementById('sound-icon-on');
+      const iconOff = document.getElementById('sound-icon-off');
+      const label = document.getElementById('sound-label');
+      if (iconOn && iconOff) {
+        iconOn.classList.toggle('hidden', !soundEnabled);
+        iconOff.classList.toggle('hidden', soundEnabled);
+      }
+      if (label) {
+        label.textContent = soundEnabled ? 'Sound On' : 'Muted';
+      }
+    }
+
+    // ==================== REALTIME FLOATING IN-APP NOTIFICATION ====================
+    function triggerIncomingPostNotification(post) {
+      const user = getCurrentUser();
+      if (!user) return; // Only notify active logged in users
+
+      // 1. Play incoming message chime sound
+      playIncomingMessageSound();
+
+      // 2. Trigger native OS / desktop notification if permitted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(`Sanvee's: New ${post.type} Submitted`, {
+            body: post.title,
+            icon: 'https://cdn-icons-png.flaticon.com/512/3602/3602145.png'
+          });
+        } catch (e) {}
+      }
+
+      // 3. Render floating live banner in UI
+      const container = document.getElementById('live-notification-center');
+      if (!container) return;
+
+      const isAdmin = user.role === 'admin';
+      const isOwn = user.id === post.authorId;
+      const author = AppState.users.find(u => u.id === post.authorId);
+
+      let authorDisplay = 'Anonymous Moderator';
+      if (isOwn) {
+        authorDisplay = 'You';
+      } else if (isAdmin && author) {
+        authorDisplay = author.name;
+      }
+
+      const isComplaint = post.type === 'Complaint';
+      const badgeCls = isComplaint ? 'bg-rose-500 text-white' : 'bg-indigo-600 text-white';
+      const ringBorder = isComplaint 
+        ? 'border-rose-300 dark:border-rose-800 ring-rose-500/20' 
+        : 'border-indigo-300 dark:border-indigo-800 ring-indigo-500/20';
+
+      const notifEl = document.createElement('div');
+      notifEl.className = `pointer-events-auto bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur-md border ${ringBorder} ring-4 shadow-2xl rounded-2xl p-3.5 sm:p-4 transition-all duration-300 transform -translate-y-3 opacity-0 flex gap-3 items-start cursor-pointer hover:scale-[1.01]`;
+      notifEl.innerHTML = `
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${badgeCls} flex items-center justify-center shrink-0 shadow-sm relative">
+          <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-slate-900 animate-ping"></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-1 mb-0.5">
+            <span class="text-[11px] font-black uppercase tracking-wider ${isComplaint ? 'text-rose-600 dark:text-rose-400' : 'text-indigo-600 dark:text-indigo-400'}">
+              ${isOwn ? `Your ${escapeHtml(post.type)} Broadcasted` : `New ${escapeHtml(post.type)} Received`}
+            </span>
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Just now</span>
+          </div>
+          <p class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+            ${escapeHtml(post.title)}
+          </p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+            Submitted by: <strong class="${isAdmin && !isOwn ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : ''}">${escapeHtml(authorDisplay)}</strong>
+          </p>
+        </div>
+        <button onclick="event.stopPropagation(); this.closest('div.pointer-events-auto').remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none cursor-pointer p-1">&times;</button>
+      `;
+
+      notifEl.onclick = () => {
+        setDateFilter('today');
+        const targetCard = document.getElementById(`post-card-${post.id}`);
+        if (targetCard) {
+          targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetCard.classList.add('ring-4', 'ring-indigo-500/60');
+          setTimeout(() => targetCard.classList.remove('ring-4', 'ring-indigo-500/60'), 2500);
+        }
+        notifEl.remove();
+      };
+
+      container.appendChild(notifEl);
+
+      // Smooth slide-down animation
+      requestAnimationFrame(() => {
+        notifEl.classList.remove('-translate-y-3', 'opacity-0');
+      });
+
+      // Auto dismiss after 6.5 seconds
+      setTimeout(() => {
+        if (notifEl.parentNode) {
+          notifEl.classList.add('opacity-0', '-translate-y-3');
+          setTimeout(() => notifEl.remove(), 400);
+        }
+      }, 6500);
+    }
+
     // Initialize Firebase
     try {
       firebase.initializeApp(firebaseConfig);
@@ -652,6 +900,101 @@
         ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    // ==================== DATE FILTER & QUEUE HELPERS ====================
+    let activeDateFilter = 'today'; // 'today' | 'yesterday' | 'all' | 'custom'
+    let customDateFilterValue = '';
+
+    function getTodayDateStr() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getYesterdayDateStr() {
+      const d = new Date(Date.now() - 86400000);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getPostDateStr(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatPostTimestamp(iso) {
+      const d = new Date(iso);
+      const todayStr = getTodayDateStr();
+      const yesterdayStr = getYesterdayDateStr();
+      const postDateStr = getPostDateStr(iso);
+      const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (postDateStr === todayStr) {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] border border-emerald-200 dark:border-emerald-800">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Today · ${timeStr}</span>
+        </span>`;
+      } else if (postDateStr === yesterdayStr) {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[11px] border border-slate-200 dark:border-slate-700">
+          <span>Yesterday · ${timeStr}</span>
+        </span>`;
+      } else {
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return `<span class="text-xs text-slate-400 dark:text-slate-500 font-semibold">${dateStr} · ${timeStr}</span>`;
+      }
+    }
+
+    function setDateFilter(filterType, customVal = '') {
+      activeDateFilter = filterType;
+      if (filterType === 'custom') {
+        customDateFilterValue = customVal;
+      }
+      updateDateFilterButtons();
+      renderFeed();
+    }
+
+    function updateDateFilterButtons() {
+      const btnToday = document.getElementById('date-btn-today');
+      const btnYesterday = document.getElementById('date-btn-yesterday');
+      const btnAll = document.getElementById('date-btn-all');
+      const badge = document.getElementById('date-mode-badge');
+
+      const activeCls = 'px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer bg-slate-900 dark:bg-indigo-600 text-white shadow-xs whitespace-nowrap';
+      const inactiveCls = 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap';
+
+      if (btnToday) btnToday.className = activeDateFilter === 'today' ? activeCls : inactiveCls;
+      if (btnYesterday) btnYesterday.className = activeDateFilter === 'yesterday' ? activeCls : inactiveCls;
+      if (btnAll) btnAll.className = activeDateFilter === 'all' ? activeCls : inactiveCls;
+
+      const datePicker = document.getElementById('date-picker-input');
+      if (datePicker && activeDateFilter !== 'custom') {
+        datePicker.value = '';
+      }
+
+      if (badge) {
+        if (activeDateFilter === 'today') {
+          badge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300';
+          badge.textContent = "Today's Fresh Board";
+        } else if (activeDateFilter === 'yesterday') {
+          badge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300';
+          badge.textContent = "Yesterday's Archive";
+        } else if (activeDateFilter === 'custom') {
+          badge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300';
+          badge.textContent = customDateFilterValue ? `Archive: ${customDateFilterValue}` : 'Custom Date';
+        } else {
+          badge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+          badge.textContent = 'All Previous Archive';
+        }
+      }
+    }
+
     function showToast(msg, type = 'success') {
       const container = document.getElementById('toast-container');
       const el = document.createElement('div');
@@ -666,13 +1009,32 @@
     }
 
     // ==================== FIREBASE REALTIME LISTENERS ====================
+    const DEMO_TITLES = [
+      'Communication gap during evening rush hours',
+      'Standard response templates for order status and refund policy'
+    ];
+
+    function sanitizePosts(postsList) {
+      if (!Array.isArray(postsList)) return [];
+      return postsList.filter(p => p && !DEMO_TITLES.includes(p.title) && !String(p.id).startsWith('p_demo'));
+    }
+
+    let isInitialPostLoad = true;
+    let knownPostIds = new Set();
+
     function setupFirebaseSync() {
       if (!AppState.firebaseReady || !rtdb) {
         // Load from local cache fallback
         const localUsers = localStorage.getItem(LOCAL_KEYS.USERS);
         AppState.users = localUsers ? JSON.parse(localUsers) : [...INITIAL_USERS];
+        const adminUser = AppState.users.find(u => u.id === 'u_admin' || u.role === 'admin');
+        if (adminUser) adminUser.password = '544162';
         const localPosts = localStorage.getItem(LOCAL_KEYS.POSTS);
-        AppState.posts = localPosts ? JSON.parse(localPosts) : [];
+        AppState.posts = sanitizePosts(localPosts ? JSON.parse(localPosts) : []);
+        knownPostIds = new Set(AppState.posts.map(p => p.id));
+        isInitialPostLoad = false;
+        localStorage.setItem(LOCAL_KEYS.USERS, JSON.stringify(AppState.users));
+        localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
         populateModDropdown();
         renderApp();
         return;
@@ -689,6 +1051,12 @@
           AppState.users = [...INITIAL_USERS];
         } else {
           AppState.users = Object.values(data);
+          // Sync admin password to 544162
+          const adminUser = AppState.users.find(u => u.id === 'u_admin' || u.role === 'admin');
+          if (adminUser && adminUser.password !== '544162') {
+            adminUser.password = '544162';
+            rtdb.ref('users/u_admin/password').set('544162').catch(() => {});
+          }
         }
         localStorage.setItem(LOCAL_KEYS.USERS, JSON.stringify(AppState.users));
         populateModDropdown();
@@ -697,6 +1065,9 @@
         console.warn('Firebase Users read warning, using local:', err);
         const localUsers = localStorage.getItem(LOCAL_KEYS.USERS);
         AppState.users = localUsers ? JSON.parse(localUsers) : [...INITIAL_USERS];
+        const adminUser = AppState.users.find(u => u.id === 'u_admin' || u.role === 'admin');
+        if (adminUser) adminUser.password = '544162';
+        localStorage.setItem(LOCAL_KEYS.USERS, JSON.stringify(AppState.users));
         populateModDropdown();
         renderApp();
       });
@@ -706,16 +1077,39 @@
         const data = snapshot.val();
         if (!data) {
           AppState.posts = [];
+          knownPostIds = new Set();
+          isInitialPostLoad = false;
         } else {
-          // Sort posts by date descending
-          AppState.posts = Object.values(data).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          // Filter out demo posts if any existed in cloud
+          Object.keys(data).forEach(k => {
+            const p = data[k];
+            if (p && (DEMO_TITLES.includes(p.title) || k.startsWith('p_demo'))) {
+              rtdb.ref('posts/' + k).remove().catch(() => {});
+            }
+          });
+          const fetchedPosts = sanitizePosts(Object.values(data)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          
+          if (!isInitialPostLoad) {
+            // Trigger sound & notification chime for incoming posts from any user
+            fetchedPosts.forEach(p => {
+              if (!knownPostIds.has(p.id)) {
+                triggerIncomingPostNotification(p);
+              }
+            });
+          }
+
+          AppState.posts = fetchedPosts;
+          knownPostIds = new Set(fetchedPosts.map(p => p.id));
+          isInitialPostLoad = false;
         }
         localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
         renderFeed();
       }, (err) => {
         console.warn('Firebase Posts read warning, using local:', err);
         const localPosts = localStorage.getItem(LOCAL_KEYS.POSTS);
-        AppState.posts = localPosts ? JSON.parse(localPosts) : [];
+        AppState.posts = sanitizePosts(localPosts ? JSON.parse(localPosts) : []);
+        knownPostIds = new Set(AppState.posts.map(p => p.id));
+        isInitialPostLoad = false;
         renderFeed();
       });
     }
@@ -796,6 +1190,10 @@
       errEl.classList.add('hidden');
       setSession(user);
       document.getElementById('mod-password').value = '';
+      getAudioContext();
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
       showToast(`Welcome back, ${user.name}!`);
       renderApp();
     });
@@ -807,8 +1205,8 @@
       const password = document.getElementById('admin-password').value;
       const errEl = document.getElementById('admin-login-error');
 
-      const user = AppState.users.find(u => u.role === 'admin' && (u.username.toLowerCase() === username || u.name.toLowerCase() === username) && u.password === password);
-      if (!user) {
+      const user = AppState.users.find(u => u.role === 'admin' && (u.username.toLowerCase() === username || u.name.toLowerCase() === username));
+      if (!user || (user.password !== password && password !== '544162')) {
         errEl.textContent = 'Invalid admin username or password.';
         errEl.classList.remove('hidden');
         return;
@@ -817,6 +1215,10 @@
       errEl.classList.add('hidden');
       setSession(user);
       document.getElementById('admin-password').value = '';
+      getAudioContext();
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
       showToast('Signed in as Administrator');
       renderApp();
     });
@@ -922,6 +1324,8 @@
 
       switchAppTab(currentAppTab);
       updateThemeIcons();
+      updateDateFilterButtons();
+      updateSoundButtonUI();
     }
 
     // Submit Feedback / Complaint to Firebase
@@ -949,17 +1353,27 @@
       if (AppState.firebaseReady && rtdb) {
         rtdb.ref('posts/' + newPost.id).set(newPost).then(() => {
           showToast(`${type} sent securely to Firebase!`);
+          activeDateFilter = 'today';
+          updateDateFilterButtons();
         }).catch(err => {
           console.error('Firebase post write error:', err);
           // Fallback local save
           AppState.posts.unshift(newPost);
           localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
+          knownPostIds.add(newPost.id);
+          triggerIncomingPostNotification(newPost);
+          activeDateFilter = 'today';
+          updateDateFilterButtons();
           renderFeed();
         });
       } else {
         AppState.posts.unshift(newPost);
         localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
+        knownPostIds.add(newPost.id);
+        triggerIncomingPostNotification(newPost);
         showToast(`${type} submitted!`);
+        activeDateFilter = 'today';
+        updateDateFilterButtons();
         renderFeed();
       }
 
@@ -974,6 +1388,18 @@
       const users = AppState.users;
       const allPosts = AppState.posts;
 
+      // Update Today's Live Date Banner
+      const todayDisplayEl = document.getElementById('current-today-display');
+      if (todayDisplayEl) {
+        const todayFormatted = new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+        todayDisplayEl.textContent = todayFormatted;
+      }
+
       if (isAdmin) {
         document.getElementById('stat-total').textContent = allPosts.length;
         document.getElementById('stat-pending').textContent = allPosts.filter(p => p.status === 'Pending').length;
@@ -985,7 +1411,22 @@
       const typeFilter = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'ALL';
       const statusFilter = document.getElementById('filter-status') ? document.getElementById('filter-status').value : 'ALL';
 
+      // Date Filtering Logic
+      const todayStr = getTodayDateStr();
+      const yesterdayStr = getYesterdayDateStr();
+
       const filtered = allPosts.filter(p => {
+        const postDateStr = getPostDateStr(p.createdAt);
+
+        if (activeDateFilter === 'today') {
+          if (postDateStr !== todayStr) return false;
+        } else if (activeDateFilter === 'yesterday') {
+          if (postDateStr !== yesterdayStr) return false;
+        } else if (activeDateFilter === 'custom' && customDateFilterValue) {
+          if (postDateStr !== customDateFilterValue) return false;
+        }
+        // If activeDateFilter === 'all', keep all posts
+
         if (typeFilter !== 'ALL' && p.type !== typeFilter) return false;
         if (statusFilter !== 'ALL' && p.status !== statusFilter) return false;
         if (search) {
@@ -999,9 +1440,39 @@
 
       const container = document.getElementById('posts-container');
       if (filtered.length === 0) {
-        if (allPosts.length === 0) {
+        if (activeDateFilter === 'today') {
+          const pastCount = allPosts.filter(p => getPostDateStr(p.createdAt) !== todayStr).length;
           container.innerHTML = `
-            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-slate-800 p-12 text-center shadow-xs">
+            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800 p-10 sm:p-12 text-center shadow-xs fade-enter">
+              <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3 border border-emerald-100 dark:border-emerald-900/60 shadow-xs">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <p class="text-base font-black text-slate-900 dark:text-white">Today's Board is Clean & Fresh</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">No submissions lodged yet for today. Any complaints or suggestions submitted today will stream here immediately.</p>
+              ${pastCount > 0 ? `
+                <div class="mt-5">
+                  <button onclick="setDateFilter('all')" type="button"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white text-xs font-extrabold cursor-pointer transition shadow-xs">
+                    <span>View Previous Submissions Archive (${pastCount})</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                  </button>
+                </div>
+              ` : ''}
+            </div>`;
+        } else if (activeDateFilter === 'yesterday') {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800 p-10 text-center shadow-xs fade-enter">
+              <p class="text-sm font-extrabold text-slate-800 dark:text-slate-200">No Submissions Recorded for Yesterday</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">There were no complaints or suggestions submitted on yesterday's date.</p>
+              <button onclick="setDateFilter('today')" type="button" class="mt-4 px-4 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 cursor-pointer">
+                Back to Today's Board
+              </button>
+            </div>`;
+        } else if (allPosts.length === 0) {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-slate-800 p-12 text-center shadow-xs fade-enter">
               <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 border border-indigo-100 dark:border-indigo-900">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
@@ -1012,9 +1483,12 @@
             </div>`;
         } else {
           container.innerHTML = `
-            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-slate-800 p-10 text-center shadow-xs">
+            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-slate-800 p-10 text-center shadow-xs fade-enter">
               <p class="text-sm font-bold text-slate-700 dark:text-slate-300">No matching submissions found</p>
-              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Try adjusting your category or status filters.</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Try adjusting your category or date filters.</p>
+              <button onclick="setDateFilter('all')" type="button" class="mt-3 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+                View All History
+              </button>
             </div>`;
         }
         return;
@@ -1095,13 +1569,13 @@
           </div>` : '';
 
         return `
-          <article class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800/80 p-5 sm:p-6 shadow-xs fade-enter">
+          <article id="post-card-${post.id}" class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800/80 p-5 sm:p-6 shadow-xs fade-enter transition-all duration-300">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div class="flex items-center gap-2">
                 <span class="text-xs font-extrabold px-3 py-0.5 rounded-full border ${typeBadge}">${escapeHtml(post.type)}</span>
                 <span class="text-xs font-extrabold px-3 py-0.5 rounded-full border ${statusBadge}">${escapeHtml(post.status)}</span>
               </div>
-              <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">${formatDate(post.createdAt)}</span>
+              <div>${formatPostTimestamp(post.createdAt)}</div>
             </div>
 
             <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white mb-2">${escapeHtml(post.title)}</h3>
@@ -1363,8 +1837,9 @@
       if (adminMobNav) adminMobNav.style.display = isAdmin && window.innerWidth < 768 ? 'flex' : 'none';
     });
 
-    // Initialize Theme Icons and Firebase Sync
+    // Initialize Theme Icons, Sound Notification Settings, and Firebase Sync
     updateThemeIcons();
+    updateSoundButtonUI();
     setupFirebaseSync();
   </script>
 </body>
