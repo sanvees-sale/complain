@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SANVEE'S BY TONY — ModVoice Portal</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
+  
+  <!-- Early Theme Init to Prevent Flash -->
+  <script>
+    const savedTheme = localStorage.getItem('modvoice_theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase Compat Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Luxury Ambient Gradient Background */
+    .bg-mesh {
+      background-color: #070b12;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+    }
+
+    .fade-enter {
+      animation: enterAnimation 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes enterAnimation {
+      from { opacity: 0; transform: translateY(8px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Custom sleek scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#070b12] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white antialiased transition-colors duration-200">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 sm:top-6 right-4 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- ==================== UNIFIED LOGIN VIEW ==================== -->
+  <div id="login-view" class="min-h-screen bg-mesh flex flex-col items-center justify-center px-4 py-8 sm:py-16 relative overflow-hidden">
+    
+    <!-- Dark Mode Toggle Button on Login Screen -->
+    <button onclick="toggleTheme()" type="button"
+      class="absolute top-4 right-4 sm:top-6 sm:right-6 px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur border border-white/10 transition cursor-pointer flex items-center gap-2 text-xs font-extrabold z-20 shadow-sm active:scale-95"
+      title="Toggle Dark / Light Theme">
+      <span class="theme-icon-sun hidden">☀️ Light</span>
+      <span class="theme-icon-moon">🌙 Dark</span>
+    </button>
+
+    <!-- Subtle Background Glow Orbs -->
+    <div class="absolute -top-32 -left-32 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-violet-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Luxury Brand Header -->
+    <div class="flex flex-col items-center text-center mb-6 sm:mb-8 max-w-md relative z-10">
+      <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-3xl bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center shadow-2xl shadow-indigo-900/40 mb-4 border border-indigo-500/30 ring-4 ring-indigo-500/10">
+        <svg class="w-8 h-8 sm:w-9 sm:h-9 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-400/20 text-indigo-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="cloud-status-badge">Firebase Online</span>
+      </div>
+
+      <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase drop-shadow-sm">
+        SANVEE'S BY TONY
+      </h1>
+      <p class="text-xs sm:text-sm font-medium text-slate-400 mt-1 max-w-xs sm:max-w-sm">
+        Internal Moderator Voice &amp; Resolution Portal
+      </p>
+    </div>
+
+    <!-- Ultra-Sleek Glass Login Card (Dark Mode Ready) -->
+    <div class="w-full max-w-md bg-white dark:bg-[#0c1220] rounded-3xl sm:rounded-[2rem] shadow-2xl shadow-slate-950/40 border border-white/20 dark:border-slate-800/90 overflow-hidden relative z-10 fade-enter transition-colors duration-200">
+      
+      <!-- Modern Pill Role Switcher -->
+      <div class="p-3 bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800">
+        <div class="grid grid-cols-2 p-1 bg-slate-200/90 dark:bg-[#11192c] rounded-2xl gap-1">
+          <button id="tab-mod" type="button" onclick="setLoginRole('moderator')"
+            class="py-2.5 sm:py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span>Moderator</span>
+          </button>
+          <button id="tab-admin" type="button" onclick="setLoginRole('admin')"
+            class="py-2.5 sm:py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            <span>Administrator</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MODERATOR LOGIN FORM -->
+      <form id="mod-login-form" class="p-6 sm:p-8 space-y-4 sm:space-y-5">
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Select Moderator Name</label>
+            <span id="mod-count-pill" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-900">
+              23 Active
+            </span>
+          </div>
+
+          <!-- Quick Name Search Filter -->
+          <div class="relative mb-2">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <input id="mod-filter-input" type="text" placeholder="Type to filter your name..." oninput="filterModDropdown()"
+              class="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-slate-50/80 dark:bg-[#11192c] text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-[#141e34] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium" />
+          </div>
+
+          <!-- Moderator Name Select Dropdown -->
+          <select id="mod-name-select" required
+            class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-[#11192c] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition shadow-xs cursor-pointer">
+            <option value="" disabled selected>-- Choose Your Name --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
+          <input id="mod-password" type="password" required placeholder="••••••••"
+            class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 text-sm bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition shadow-xs font-medium" />
+        </div>
+
+        <p id="mod-login-error" class="text-xs text-rose-600 font-bold hidden"></p>
+
+        <button type="submit"
+          class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-extrabold text-sm shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition cursor-pointer active:scale-[0.98]">
+          Sign In as Moderator
+        </button>
+      </form>
+
+      <!-- ADMIN LOGIN FORM -->
+      <form id="admin-login-form" class="hidden p-6 sm:p-8 space-y-4 sm:space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Admin Username</label>
+          <input id="admin-username" type="text" required placeholder="e.g. admin"
+            class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 text-sm bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition shadow-xs font-semibold" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Admin Password</label>
+          <input id="admin-password" type="password" required placeholder="••••••••"
+            class="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 text-sm bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition shadow-xs font-semibold" />
+        </div>
+
+        <p id="admin-login-error" class="text-xs text-rose-600 font-bold hidden"></p>
+
+        <button type="submit"
+          class="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm shadow-lg shadow-slate-900/30 transition cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2">
+          <span>Sign In as Admin</span>
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </button>
+      </form>
+
+    </div>
+
+    <!-- Anonymous Assurance Pill -->
+    <div class="mt-6 text-center text-xs text-slate-400 relative z-10 flex items-center gap-2 bg-slate-900/60 backdrop-blur px-4 py-2 rounded-full border border-white/10">
+      <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+      <span>Submissions are strictly anonymous to all team members.</span>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN PORTAL VIEW ==================== -->
+  <div id="app-view" class="hidden min-h-screen flex flex-col bg-slate-50 dark:bg-[#070b12] text-slate-800 dark:text-slate-100 transition-colors duration-200">
+    
+    <!-- Ultra-Clean Top Navbar (Dark Mode Ready) -->
+    <header class="sticky top-0 z-30 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#0c111e]/90 backdrop-blur-md shadow-xs transition-colors duration-200">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-4">
+        
+        <!-- Brand & User Identity -->
+        <div class="flex items-center gap-3">
+          <div id="nav-logo" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-950 flex items-center justify-center text-indigo-400 font-black text-sm shadow-sm border border-slate-800 shrink-0">
+            ST
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-black text-slate-900 dark:text-white tracking-tight text-sm sm:text-base uppercase">SANVEE'S BY TONY</span>
+              <span id="nav-role-badge" class="text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full"></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <p id="nav-user-label" class="text-xs text-slate-500 dark:text-slate-400 font-semibold"></p>
+              <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+              <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Live Sync</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Navigation Tabs (Desktop - Strictly hidden for moderators) -->
+        <div id="admin-nav-tabs" style="display: none;" class="items-center gap-1 bg-slate-100 dark:bg-[#11192c] p-1 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-extrabold">
+          <button id="nav-btn-feed" onclick="switchAppTab('feed')" class="px-4 py-2 rounded-xl transition cursor-pointer">
+            Submissions Feed
+          </button>
+          <button id="nav-btn-mods" onclick="switchAppTab('mods')" class="px-4 py-2 rounded-xl transition cursor-pointer">
+            Manage Moderators
+          </button>
+        </div>
+
+        <!-- Controls: Theme Toggle, Password, Logout -->
+        <div class="flex items-center gap-2">
+          <!-- Theme Toggle Button in App Navbar -->
+          <button onclick="toggleTheme()" type="button"
+            class="p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            title="Toggle Dark / Light Theme">
+            <span class="theme-icon-sun hidden">☀️</span>
+            <span class="theme-icon-moon">🌙</span>
+            <span class="hidden sm:inline theme-label">Dark</span>
+          </button>
+
+          <button onclick="openPasswordModal()"
+            class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition cursor-pointer flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+            </svg>
+            <span class="hidden sm:inline">Password</span>
+          </button>
+          
+          <button onclick="logout()"
+            class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-bold transition cursor-pointer flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Tab Switcher (Admin Only - Strictly hidden for moderators) -->
+      <div id="admin-mob-nav-tabs" style="display: none;" class="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0c111e] px-3 py-1.5 gap-2">
+        <button id="mob-nav-btn-feed" onclick="switchAppTab('feed')" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-slate-900 dark:bg-indigo-600 text-white">
+          Submissions Feed
+        </button>
+        <button id="mob-nav-btn-mods" onclick="switchAppTab('mods')" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400">
+          Manage Moderators
+        </button>
+      </div>
+    </header>
+
+    <!-- App Body Content -->
+    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1">
+
+      <!-- ==================== SUBMISSIONS FEED VIEW ==================== -->
+      <section id="section-feed" class="space-y-6 fade-enter">
+        
+        <!-- Admin Summary Stats Bar -->
+        <div id="admin-summary-stats" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800/90 p-4 sm:p-5 shadow-xs">
+            <div class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total Voice</div>
+            <div id="stat-total" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">0</div>
+          </div>
+          <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800/90 p-4 sm:p-5 shadow-xs">
+            <div class="text-[11px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending Review</div>
+            <div id="stat-pending" class="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 mt-1">0</div>
+          </div>
+          <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800/90 p-4 sm:p-5 shadow-xs">
+            <div class="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">In Review</div>
+            <div id="stat-review" class="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400 mt-1">0</div>
+          </div>
+          <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800/90 p-4 sm:p-5 shadow-xs">
+            <div class="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Resolved</div>
+            <div id="stat-resolved" class="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">0</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Moderator Submission Form Panel (Visible ONLY to Moderators) -->
+          <div id="mod-submit-panel" class="hidden lg:col-span-5 bg-white dark:bg-[#0c1220] rounded-3xl sm:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-7 sticky top-24">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+              <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Submit Team Voice</h2>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              Your voice matters. Your identity is strictly confidential to all team members and visible only to the Administrator.
+            </p>
+
+            <form id="post-form" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">Category</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="cursor-pointer">
+                    <input type="radio" name="post-type" value="Complaint" checked class="peer sr-only" />
+                    <div class="text-center py-2.5 px-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 peer-checked:bg-rose-50 dark:peer-checked:bg-rose-950/40 peer-checked:border-rose-400 dark:peer-checked:border-rose-600 peer-checked:text-rose-700 dark:peer-checked:text-rose-300 transition">
+                      🚨 Complaint
+                    </div>
+                  </label>
+                  <label class="cursor-pointer">
+                    <input type="radio" name="post-type" value="Suggestion" class="peer sr-only" />
+                    <div class="text-center py-2.5 px-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 peer-checked:bg-indigo-50 dark:peer-checked:bg-indigo-950/40 peer-checked:border-indigo-400 dark:peer-checked:border-indigo-600 peer-checked:text-indigo-700 dark:peer-checked:text-indigo-300 transition">
+                      💡 Suggestion
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">Subject / Title</label>
+                <input id="post-title" type="text" required maxlength="120" placeholder="Brief summary of the issue..."
+                  class="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1.5">Details</label>
+                <textarea id="post-body" rows="4" required placeholder="Explain your complaint or suggestion clearly..."
+                  class="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none transition font-medium"></textarea>
+              </div>
+
+              <button type="submit"
+                class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-extrabold shadow-md shadow-indigo-600/20 transition cursor-pointer active:scale-[0.98]">
+                Submit Anonymously
+              </button>
+            </form>
+          </div>
+
+          <!-- Feed Posts Column -->
+          <div id="feed-list-col" class="lg:col-span-7 space-y-4">
+            <!-- Filter Toolbar -->
+            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-slate-800 p-3 sm:p-4 flex flex-col sm:flex-row gap-3">
+              <input id="filter-search" type="text" placeholder="Search complaints or suggestions..." oninput="renderFeed()"
+                class="flex-1 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium" />
+              <div class="flex gap-2">
+                <select id="filter-type" onchange="renderFeed()"
+                  class="px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#11192c] focus:outline-none cursor-pointer">
+                  <option value="ALL">All Categories</option>
+                  <option value="Complaint">Complaints</option>
+                  <option value="Suggestion">Suggestions</option>
+                </select>
+                <select id="filter-status" onchange="renderFeed()"
+                  class="px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#11192c] focus:outline-none cursor-pointer">
+                  <option value="ALL">All Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Review">In Review</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Feed Post Items Container -->
+            <div id="posts-container" class="space-y-4"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==================== MANAGE MODERATORS VIEW (ADMIN ONLY) ==================== -->
+      <section id="section-mods" class="hidden space-y-6 fade-enter">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Add Moderator Form Card -->
+          <div class="lg:col-span-5 bg-white dark:bg-[#0c1220] rounded-3xl sm:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-7 sticky top-24">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-emerald-400"></span>
+              <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Add New Moderator</h2>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              Create a moderator profile. It will sync directly to Firebase and immediately appear in the login dropdown.
+            </p>
+
+            <form id="create-mod-form" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Full Name</label>
+                <input id="new-mod-name" type="text" required placeholder="e.g. Kawsar Ahmed"
+                  class="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Initial Password</label>
+                <input id="new-mod-password" type="password" value="1234" required minlength="3" placeholder="••••••••"
+                  class="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold" />
+              </div>
+
+              <button type="submit"
+                class="w-full py-3 rounded-2xl bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 text-white text-sm font-extrabold shadow-md transition cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]">
+                <svg class="w-4 h-4 text-emerald-400 dark:text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                <span>Add Moderator to Firebase</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Registered Moderators Directory -->
+          <div class="lg:col-span-7 bg-white dark:bg-[#0c1220] rounded-3xl sm:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-black text-slate-900 dark:text-white">Registered Moderators</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Live roster synced from Firebase</p>
+              </div>
+              <span id="mods-count-badge" class="text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-900">
+                23 accounts
+              </span>
+            </div>
+
+            <!-- Search inside admin directory -->
+            <div class="p-3 bg-slate-50 dark:bg-[#11192c] border-b border-slate-100 dark:border-slate-800">
+              <input id="admin-mod-search" type="text" placeholder="Search moderator name..." oninput="renderModerators()"
+                class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-[#0c1220] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium" />
+            </div>
+
+            <div id="mods-list" class="divide-y divide-slate-100 dark:divide-slate-800/80 max-h-[580px] overflow-y-auto"></div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Sleek Minimal Footer (Dark Mode Ready) -->
+    <footer class="border-t border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c111e] py-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors duration-200">
+      SANVEE'S BY TONY © 2026 • ModVoice Portal • Realtime Cloud Protected
+    </footer>
+  </div>
+
+  <!-- ==================== CHANGE OWN PASSWORD MODAL ==================== -->
+  <div id="password-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#0c1220] rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl fade-enter border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-black text-slate-900 dark:text-white">Change Password</h3>
+        <button onclick="closePasswordModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl leading-none cursor-pointer">&times;</button>
+      </div>
+      <form id="change-password-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Current Password</label>
+          <input id="cp-current" type="password" required
+            class="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-semibold" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">New Password</label>
+          <input id="cp-new" type="password" required minlength="3"
+            class="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-semibold" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Confirm New Password</label>
+          <input id="cp-confirm" type="password" required minlength="3"
+            class="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-semibold" />
+        </div>
+        <p id="cp-error" class="text-xs text-rose-600 font-bold hidden"></p>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closePasswordModal()"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold cursor-pointer">
+            Save Password
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== ADMIN RESET MOD PASSWORD MODAL ==================== -->
+  <div id="reset-mod-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#0c1220] rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl fade-enter border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-black text-slate-900 dark:text-white">Reset Moderator Password</h3>
+        <button onclick="closeResetModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl leading-none cursor-pointer">&times;</button>
+      </div>
+      <p id="reset-mod-label" class="text-xs text-slate-600 dark:text-slate-400 mb-4"></p>
+      <form id="reset-mod-form" class="space-y-4">
+        <input id="reset-mod-id" type="hidden" />
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">New Password</label>
+          <input id="reset-mod-pass" type="password" required minlength="3" placeholder="••••••••"
+            class="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#11192c] text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeResetModal()"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-5 py-2 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 text-white text-xs font-extrabold cursor-pointer">
+            Update Password
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT & FIREBASE INTEGRATION ==================== -->
+  <script>
+    // User-provided Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyA96AmELcDGBay-L7hWVzz4VIoYmbmQHa0",
+      authDomain: "sanvee-s-41340.firebaseapp.com",
+      databaseURL: "https://sanvee-s-41340-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sanvee-s-41340",
+      storageBucket: "sanvee-s-41340.firebasestorage.app",
+      messagingSenderId: "141238000539",
+      appId: "1:141238000539:web:3268981fc56fd61e809f3e",
+      measurementId: "G-NW1M05Y1F1"
+    };
+
+    // Official 23 Moderators List from Sanvee's Roster
+    const INITIAL_USERS = [
+      { id: 'u_admin', name: 'Sheikh Shahmiran Manik', username: 'admin', password: 'admin123', role: 'admin' },
+      { id: 'u_mod_01', name: 'Sefat Karim', password: '1234', role: 'moderator' },
+      { id: 'u_mod_02', name: 'Tarikul Islam', password: '1234', role: 'moderator' },
+      { id: 'u_mod_03', name: 'Sajedul Islam', password: '1234', role: 'moderator' },
+      { id: 'u_mod_04', name: 'Omar Faruk Majumder', password: '1234', role: 'moderator' },
+      { id: 'u_mod_05', name: 'Al Arafat', password: '1234', role: 'moderator' },
+      { id: 'u_mod_06', name: 'Moinul Islam', password: '1234', role: 'moderator' },
+      { id: 'u_mod_07', name: 'Md Sujon', password: '1234', role: 'moderator' },
+      { id: 'u_mod_08', name: 'Md Raihan', password: '1234', role: 'moderator' },
+      { id: 'u_mod_09', name: 'Fahim Howlader', password: '1234', role: 'moderator' },
+      { id: 'u_mod_10', name: 'Farcy', password: '1234', role: 'moderator' },
+      { id: 'u_mod_11', name: 'Sami', password: '1234', role: 'moderator' },
+      { id: 'u_mod_12', name: 'Hamim', password: '1234', role: 'moderator' },
+      { id: 'u_mod_13', name: 'Biplob', password: '1234', role: 'moderator' },
+      { id: 'u_mod_14', name: 'Kowshiq', password: '1234', role: 'moderator' },
+      { id: 'u_mod_15', name: 'Sahil (Forever)', password: '1234', role: 'moderator' },
+      { id: 'u_mod_16', name: 'Toha', password: '1234', role: 'moderator' },
+      { id: 'u_mod_17', name: 'Zubayer Mridha', password: '1234', role: 'moderator' },
+      { id: 'u_mod_18', name: 'Abdul Muhid', password: '1234', role: 'moderator' },
+      { id: 'u_mod_19', name: 'Sajib Chandro Sarker', password: '1234', role: 'moderator' },
+      { id: 'u_mod_20', name: 'Piyal Sarker', password: '1234', role: 'moderator' },
+      { id: 'u_mod_21', name: 'Tonmoy', password: '1234', role: 'moderator' },
+      { id: 'u_mod_22', name: 'Omar Faruk', password: '1234', role: 'moderator' },
+      { id: 'u_mod_23', name: 'Mehadi Hasan', password: '1234', role: 'moderator' }
+    ];
+
+    // Local Storage Keys
+    const LOCAL_KEYS = {
+      USERS: 'modvoice_firebase_users_cache',
+      POSTS: 'modvoice_firebase_posts_cache',
+      SESSION: 'modvoice_firebase_session'
+    };
+
+    // In-Memory Reactive State
+    const AppState = {
+      users: [],
+      posts: [],
+      firebaseReady: false
+    };
+
+    let rtdb = null;
+
+    // ==================== THEME TOGGLE LOGIC ====================
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('modvoice_theme', isDark ? 'dark' : 'light');
+      updateThemeIcons();
+      showToast(isDark ? 'Dark mode enabled' : 'Light mode enabled');
+    }
+
+    function updateThemeIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.querySelectorAll('.theme-icon-sun').forEach(el => el.classList.toggle('hidden', !isDark));
+      document.querySelectorAll('.theme-icon-moon').forEach(el => el.classList.toggle('hidden', isDark));
+      document.querySelectorAll('.theme-label').forEach(el => {
+        el.textContent = isDark ? 'Light' : 'Dark';
+      });
+    }
+
+    // Initialize Firebase
+    try {
+      firebase.initializeApp(firebaseConfig);
+      rtdb = firebase.database();
+      AppState.firebaseReady = true;
+      const statusBadge = document.getElementById('cloud-status-badge');
+      if (statusBadge) statusBadge.textContent = 'Firebase Cloud Connected';
+    } catch (err) {
+      console.warn('Firebase initialization warning:', err);
+      const statusBadge = document.getElementById('cloud-status-badge');
+      if (statusBadge) statusBadge.textContent = 'Offline Cache Mode';
+    }
+
+    // Helper functions for user & session state
+    function getSession() {
+      const raw = localStorage.getItem(LOCAL_KEYS.SESSION);
+      return raw ? JSON.parse(raw) : null;
+    }
+
+    function setSession(user) {
+      if (user) {
+        localStorage.setItem(LOCAL_KEYS.SESSION, JSON.stringify({ id: user.id, role: user.role }));
+      } else {
+        localStorage.removeItem(LOCAL_KEYS.SESSION);
+      }
+    }
+
+    function getCurrentUser() {
+      const sess = getSession();
+      if (!sess) return null;
+      return AppState.users.find(u => u.id === sess.id) || null;
+    }
+
+    let activeLoginRole = 'moderator';
+    let currentAppTab = 'feed';
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+        ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      const bg = type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-900 dark:bg-indigo-600 text-white border border-slate-700 dark:border-indigo-400';
+      el.className = `${bg} px-4 py-3 rounded-2xl text-xs font-bold shadow-2xl fade-enter pointer-events-auto flex items-center gap-2`;
+      el.innerHTML = `
+        <span class="w-2 h-2 rounded-full ${type === 'error' ? 'bg-white' : 'bg-emerald-400'}"></span>
+        <span>${escapeHtml(msg)}</span>
+      `;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3400);
+    }
+
+    // ==================== FIREBASE REALTIME LISTENERS ====================
+    function setupFirebaseSync() {
+      if (!AppState.firebaseReady || !rtdb) {
+        // Load from local cache fallback
+        const localUsers = localStorage.getItem(LOCAL_KEYS.USERS);
+        AppState.users = localUsers ? JSON.parse(localUsers) : [...INITIAL_USERS];
+        const localPosts = localStorage.getItem(LOCAL_KEYS.POSTS);
+        AppState.posts = localPosts ? JSON.parse(localPosts) : [];
+        populateModDropdown();
+        renderApp();
+        return;
+      }
+
+      // 1. Sync Users from Firebase RTDB
+      rtdb.ref('users').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          // First time database initialization: seed with all 23 official members
+          const seedMap = {};
+          INITIAL_USERS.forEach(u => { seedMap[u.id] = u; });
+          rtdb.ref('users').set(seedMap);
+          AppState.users = [...INITIAL_USERS];
+        } else {
+          AppState.users = Object.values(data);
+        }
+        localStorage.setItem(LOCAL_KEYS.USERS, JSON.stringify(AppState.users));
+        populateModDropdown();
+        renderApp();
+      }, (err) => {
+        console.warn('Firebase Users read warning, using local:', err);
+        const localUsers = localStorage.getItem(LOCAL_KEYS.USERS);
+        AppState.users = localUsers ? JSON.parse(localUsers) : [...INITIAL_USERS];
+        populateModDropdown();
+        renderApp();
+      });
+
+      // 2. Sync Posts / Complaints from Firebase RTDB
+      rtdb.ref('posts').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          AppState.posts = [];
+        } else {
+          // Sort posts by date descending
+          AppState.posts = Object.values(data).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+        localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
+        renderFeed();
+      }, (err) => {
+        console.warn('Firebase Posts read warning, using local:', err);
+        const localPosts = localStorage.getItem(LOCAL_KEYS.POSTS);
+        AppState.posts = localPosts ? JSON.parse(localPosts) : [];
+        renderFeed();
+      });
+    }
+
+    // Role switcher on login card
+    function setLoginRole(role) {
+      activeLoginRole = role;
+      const modTab = document.getElementById('tab-mod');
+      const adminTab = document.getElementById('tab-admin');
+      const modForm = document.getElementById('mod-login-form');
+      const adminForm = document.getElementById('admin-login-form');
+
+      if (role === 'moderator') {
+        modTab.className = 'py-2.5 sm:py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm';
+        adminTab.className = 'py-2.5 sm:py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+        modForm.classList.remove('hidden');
+        adminForm.classList.add('hidden');
+      } else {
+        adminTab.className = 'py-2.5 sm:py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer bg-slate-900 dark:bg-slate-800 text-white shadow-sm';
+        modTab.className = 'py-2.5 sm:py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+        adminForm.classList.remove('hidden');
+        modForm.classList.add('hidden');
+      }
+    }
+
+    // Populate moderator dropdown
+    function populateModDropdown(filterTerm = '') {
+      const select = document.getElementById('mod-name-select');
+      const mods = AppState.users.filter(u => u.role === 'moderator');
+      const countPill = document.getElementById('mod-count-pill');
+      if (countPill) countPill.textContent = `${mods.length} Active`;
+
+      const currentVal = select.value;
+      select.innerHTML = '<option value="" disabled selected>-- Choose Your Name --</option>';
+
+      const filtered = mods.filter(m => {
+        if (!filterTerm) return true;
+        return m.name.toLowerCase().includes(filterTerm.toLowerCase());
+      });
+
+      filtered.forEach((m) => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.name;
+        select.appendChild(opt);
+      });
+
+      if (currentVal && filtered.some(m => m.id === currentVal)) {
+        select.value = currentVal;
+      }
+    }
+
+    function filterModDropdown() {
+      const term = document.getElementById('mod-filter-input').value.trim();
+      populateModDropdown(term);
+    }
+
+    // Moderator Login Submission
+    document.getElementById('mod-login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const modId = document.getElementById('mod-name-select').value;
+      const password = document.getElementById('mod-password').value;
+      const errEl = document.getElementById('mod-login-error');
+
+      if (!modId) {
+        errEl.textContent = 'Please choose your name from the dropdown.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const user = AppState.users.find(u => u.id === modId);
+      if (!user || user.password !== password) {
+        errEl.textContent = 'Incorrect password. Please try again.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      errEl.classList.add('hidden');
+      setSession(user);
+      document.getElementById('mod-password').value = '';
+      showToast(`Welcome back, ${user.name}!`);
+      renderApp();
+    });
+
+    // Admin Login Submission
+    document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('admin-username').value.trim().toLowerCase();
+      const password = document.getElementById('admin-password').value;
+      const errEl = document.getElementById('admin-login-error');
+
+      const user = AppState.users.find(u => u.role === 'admin' && (u.username.toLowerCase() === username || u.name.toLowerCase() === username) && u.password === password);
+      if (!user) {
+        errEl.textContent = 'Invalid admin username or password.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      errEl.classList.add('hidden');
+      setSession(user);
+      document.getElementById('admin-password').value = '';
+      showToast('Signed in as Administrator');
+      renderApp();
+    });
+
+    function logout() {
+      setSession(null);
+      currentAppTab = 'feed';
+      renderApp();
+      showToast('Logged out successfully');
+    }
+
+    function switchAppTab(tab) {
+      const user = getCurrentUser();
+      const isAdmin = user && user.role === 'admin';
+
+      // Security check: Moderators can ONLY view the feed tab
+      if (!isAdmin) {
+        tab = 'feed';
+      }
+      currentAppTab = tab;
+
+      const feedSec = document.getElementById('section-feed');
+      const modsSec = document.getElementById('section-mods');
+      const feedBtn = document.getElementById('nav-btn-feed');
+      const modsBtn = document.getElementById('nav-btn-mods');
+      const mobFeedBtn = document.getElementById('mob-nav-btn-feed');
+      const mobModsBtn = document.getElementById('mob-nav-btn-mods');
+
+      const activeCls = 'px-4 py-2 rounded-xl transition cursor-pointer bg-slate-900 dark:bg-indigo-600 text-white shadow-xs';
+      const inactiveCls = 'px-4 py-2 rounded-xl transition cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800';
+
+      if (feedSec) feedSec.classList.toggle('hidden', tab !== 'feed');
+      if (modsSec) {
+        modsSec.classList.toggle('hidden', !isAdmin || tab !== 'mods');
+        modsSec.style.display = (!isAdmin || tab !== 'mods') ? 'none' : 'block';
+      }
+
+      if (feedBtn) feedBtn.className = tab === 'feed' ? activeCls : inactiveCls;
+      if (modsBtn) modsBtn.className = tab === 'mods' ? activeCls : inactiveCls;
+
+      if (mobFeedBtn) mobFeedBtn.className = tab === 'feed' ? 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-slate-900 dark:bg-indigo-600 text-white' : 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400';
+      if (mobModsBtn) mobModsBtn.className = tab === 'mods' ? 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-slate-900 dark:bg-indigo-600 text-white' : 'flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400';
+
+      if (tab === 'feed') renderFeed();
+      if (tab === 'mods' && isAdmin) renderModerators();
+    }
+
+    function renderApp() {
+      const user = getCurrentUser();
+      const loginView = document.getElementById('login-view');
+      const appView = document.getElementById('app-view');
+
+      if (!user) {
+        loginView.classList.remove('hidden');
+        appView.classList.add('hidden');
+        populateModDropdown();
+        return;
+      }
+
+      loginView.classList.add('hidden');
+      appView.classList.remove('hidden');
+
+      const isAdmin = user.role === 'admin';
+      const roleBadge = document.getElementById('nav-role-badge');
+      const userLabel = document.getElementById('nav-user-label');
+
+      // Admin navigation visibility - STRICTLY hidden from moderators
+      const adminNav = document.getElementById('admin-nav-tabs');
+      const adminMobNav = document.getElementById('admin-mob-nav-tabs');
+      const adminStats = document.getElementById('admin-summary-stats');
+      const modsSec = document.getElementById('section-mods');
+
+      if (isAdmin) {
+        if (adminNav) adminNav.style.display = window.innerWidth >= 768 ? 'flex' : 'none';
+        if (adminMobNav) adminMobNav.style.display = window.innerWidth < 768 ? 'flex' : 'none';
+        if (adminStats) adminStats.classList.remove('hidden');
+      } else {
+        // Completely hide Manage Moderators navigation and section for all moderators
+        if (adminNav) adminNav.style.display = 'none';
+        if (adminMobNav) adminMobNav.style.display = 'none';
+        if (adminStats) adminStats.classList.add('hidden');
+        if (modsSec) {
+          modsSec.classList.add('hidden');
+          modsSec.style.display = 'none';
+        }
+        currentAppTab = 'feed';
+      }
+
+      document.getElementById('mod-submit-panel').classList.toggle('hidden', isAdmin);
+
+      const feedCol = document.getElementById('feed-list-col');
+      feedCol.className = isAdmin ? 'lg:col-span-12 space-y-4' : 'lg:col-span-7 space-y-4';
+
+      if (isAdmin) {
+        roleBadge.className = 'text-[10px] sm:text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+        roleBadge.textContent = 'Administrator';
+        userLabel.textContent = `${user.name}`;
+      } else {
+        roleBadge.className = 'text-[10px] sm:text-[11px] font-black px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+        roleBadge.textContent = 'Moderator';
+        userLabel.textContent = `${user.name}`;
+      }
+
+      switchAppTab(currentAppTab);
+      updateThemeIcons();
+    }
+
+    // Submit Feedback / Complaint to Firebase
+    document.getElementById('post-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = getCurrentUser();
+      if (!user || user.role !== 'moderator') return;
+
+      const type = document.querySelector('input[name="post-type"]:checked').value;
+      const title = document.getElementById('post-title').value.trim();
+      const body = document.getElementById('post-body').value.trim();
+      if (!title || !body) return;
+
+      const newPost = {
+        id: 'p_' + Date.now(),
+        type,
+        title,
+        body,
+        authorId: user.id,
+        status: 'Pending',
+        adminReply: '',
+        createdAt: new Date().toISOString()
+      };
+
+      if (AppState.firebaseReady && rtdb) {
+        rtdb.ref('posts/' + newPost.id).set(newPost).then(() => {
+          showToast(`${type} sent securely to Firebase!`);
+        }).catch(err => {
+          console.error('Firebase post write error:', err);
+          // Fallback local save
+          AppState.posts.unshift(newPost);
+          localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
+          renderFeed();
+        });
+      } else {
+        AppState.posts.unshift(newPost);
+        localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
+        showToast(`${type} submitted!`);
+        renderFeed();
+      }
+
+      e.target.reset();
+    });
+
+    // Render Submissions Feed
+    function renderFeed() {
+      const user = getCurrentUser();
+      if (!user) return;
+      const isAdmin = user.role === 'admin';
+      const users = AppState.users;
+      const allPosts = AppState.posts;
+
+      if (isAdmin) {
+        document.getElementById('stat-total').textContent = allPosts.length;
+        document.getElementById('stat-pending').textContent = allPosts.filter(p => p.status === 'Pending').length;
+        document.getElementById('stat-review').textContent = allPosts.filter(p => p.status === 'In Review').length;
+        document.getElementById('stat-resolved').textContent = allPosts.filter(p => p.status === 'Resolved').length;
+      }
+
+      const search = (document.getElementById('filter-search') ? document.getElementById('filter-search').value : '').trim().toLowerCase();
+      const typeFilter = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'ALL';
+      const statusFilter = document.getElementById('filter-status') ? document.getElementById('filter-status').value : 'ALL';
+
+      const filtered = allPosts.filter(p => {
+        if (typeFilter !== 'ALL' && p.type !== typeFilter) return false;
+        if (statusFilter !== 'ALL' && p.status !== statusFilter) return false;
+        if (search) {
+          const author = users.find(u => u.id === p.authorId);
+          const authorMatch = isAdmin && author && author.name.toLowerCase().includes(search);
+          const textMatch = p.title.toLowerCase().includes(search) || p.body.toLowerCase().includes(search);
+          if (!textMatch && !authorMatch) return false;
+        }
+        return true;
+      });
+
+      const container = document.getElementById('posts-container');
+      if (filtered.length === 0) {
+        if (allPosts.length === 0) {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-slate-800 p-12 text-center shadow-xs">
+              <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 border border-indigo-100 dark:border-indigo-900">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+              </div>
+              <p class="text-sm font-extrabold text-slate-800 dark:text-white">No Submissions Yet</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Submitted team complaints or suggestions will stream here in real-time.</p>
+            </div>`;
+        } else {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200 dark:border-slate-800 p-10 text-center shadow-xs">
+              <p class="text-sm font-bold text-slate-700 dark:text-slate-300">No matching submissions found</p>
+              <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Try adjusting your category or status filters.</p>
+            </div>`;
+        }
+        return;
+      }
+
+      container.innerHTML = filtered.map(post => {
+        const typeBadge = post.type === 'Complaint'
+          ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900'
+          : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900';
+
+        const statusMap = {
+          'Pending': 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900',
+          'In Review': 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900',
+          'Resolved': 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900'
+        };
+        const statusBadge = statusMap[post.status] || statusMap['Pending'];
+
+        // Strictly anonymous to all other moderators, revealed ONLY to admin
+        let authorHtml = '';
+        if (isAdmin) {
+          const author = users.find(u => u.id === post.authorId);
+          const authorName = author ? escapeHtml(author.name) : 'Removed Moderator';
+          authorHtml = `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+              <span class="text-[10px] uppercase tracking-wider bg-emerald-700 text-white px-1.5 py-0.5 rounded font-extrabold">Admin Oversight</span>
+              <span>Submitted by: <strong>${authorName}</strong></span>
+            </span>`;
+        } else {
+          const isOwn = post.authorId === user.id;
+          authorHtml = `
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <svg class="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+              ${isOwn ? 'Anonymous Moderator <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">(You)</span>' : 'Anonymous Moderator'}
+            </span>`;
+        }
+
+        // Official Admin Reply Block
+        const replyBlock = post.adminReply ? `
+          <div class="mt-4 bg-slate-50 dark:bg-[#11192c] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4">
+            <div class="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Admin Official Reply</span>
+            </div>
+            <p class="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line font-medium leading-relaxed">${escapeHtml(post.adminReply)}</p>
+          </div>` : '';
+
+        // Admin Action Toolbar
+        const adminControls = isAdmin ? `
+          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-slate-500 dark:text-slate-400">Update Status:</label>
+                <select onchange="updatePostStatus('${post.id}', this.value)"
+                  class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#11192c] cursor-pointer">
+                  <option value="Pending" ${post.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                  <option value="In Review" ${post.status === 'In Review' ? 'selected' : ''}>In Review</option>
+                  <option value="Resolved" ${post.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                </select>
+              </div>
+              <button onclick="deletePost('${post.id}')"
+                class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer">
+                Delete Submission
+              </button>
+            </div>
+            <div class="flex gap-2">
+              <input id="reply-input-${post.id}" type="text" value="${escapeHtml(post.adminReply)}"
+                placeholder="Write an official response visible to the team..."
+                class="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#162036] text-slate-800 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium" />
+              <button onclick="saveAdminReply('${post.id}')"
+                class="px-4 py-2 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer transition">
+                Save Reply
+              </button>
+            </div>
+          </div>` : '';
+
+        return `
+          <article class="bg-white dark:bg-[#0c1220] rounded-3xl border border-slate-200/90 dark:border-slate-800/80 p-5 sm:p-6 shadow-xs fade-enter">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold px-3 py-0.5 rounded-full border ${typeBadge}">${escapeHtml(post.type)}</span>
+                <span class="text-xs font-extrabold px-3 py-0.5 rounded-full border ${statusBadge}">${escapeHtml(post.status)}</span>
+              </div>
+              <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">${formatDate(post.createdAt)}</span>
+            </div>
+
+            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white mb-2">${escapeHtml(post.title)}</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed font-normal">${escapeHtml(post.body)}</p>
+
+            <div class="mt-4 flex items-center justify-between">
+              ${authorHtml}
+            </div>
+
+            ${replyBlock}
+            ${adminControls}
+          </article>`;
+      }).join('');
+    }
+
+    function updatePostStatus(postId, newStatus) {
+      if (AppState.firebaseReady && rtdb) {
+        rtdb.ref(`posts/${postId}/status`).set(newStatus).then(() => {
+          showToast(`Status updated to ${newStatus}`);
+        });
+      } else {
+        const post = AppState.posts.find(p => p.id === postId);
+        if (post) {
+          post.status = newStatus;
+          localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
+          renderFeed();
+          showToast(`Status updated to ${newStatus}`);
+        }
+      }
+    }
+
+    function saveAdminReply(postId) {
+      const input = document.getElementById(`reply-input-${postId}`);
+      if (!input) return;
+      const reply = input.value.trim();
+
+      if (AppState.firebaseReady && rtdb) {
+        rtdb.ref(`posts/${postId}/adminReply`).set(reply).then(() => {
+          showToast('Admin reply saved to Firebase');
+        });
+      } else {
+        const post = AppState.posts.find(p => p.id === postId);
+        if (post) {
+          post.adminReply = reply;
+          localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
+          renderFeed();
+          showToast('Admin reply saved');
+        }
+      }
+    }
+
+    function deletePost(postId) {
+      if (!confirm('Are you sure you want to permanently delete this submission?')) return;
+
+      if (AppState.firebaseReady && rtdb) {
+        rtdb.ref(`posts/${postId}`).remove().then(() => {
+          showToast('Submission deleted from Firebase');
+        });
+      } else {
+        AppState.posts = AppState.posts.filter(p => p.id !== postId);
+        localStorage.setItem(LOCAL_KEYS.POSTS, JSON.stringify(AppState.posts));
+        showToast('Submission deleted');
+        renderFeed();
+      }
+    }
+
+    // ==================== MANAGE MODERATORS (ADMIN) ====================
+    document.getElementById('create-mod-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('new-mod-name').value.trim();
+      const password = document.getElementById('new-mod-password').value;
+
+      if (!name) return;
+
+      if (AppState.users.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+        showToast('A moderator with this name already exists.', 'error');
+        return;
+      }
+
+      const newMod = {
+        id: 'u_mod_' + Date.now(),
+        name,
+        password: password || '1234',
+        role: 'moderator'
+      };
+
+      if (AppState.firebaseReady && rtdb) {
+        rtdb.ref(`users/${newMod.id}`).set(newMod).then(() => {
+          showToast(`Moderator ${name} added to Firebase!`);
+        });
+      } else {
+        AppState.users.push(newMod);
+        localStorage.setItem(LOCAL_KEYS.USERS, JSON.stringify(AppState.users));
+        showToast(`Moderator ${name} added!`);
+        populateModDropdown();
+        renderModerators();
+      }
+
+      e.target.reset();
+      document.getElementById('new-mod-password').value = '1234';
+    });
+
+    function renderModerators() {
+      const mods = AppState.users.filter(u => u.role === 'moderator');
+      const posts = AppState.posts;
+      const countBadge = document.getElementById('mods-count-badge');
+      if (countBadge) countBadge.textContent = `${mods.length} accounts`;
+
+      const search = (document.getElementById('admin-mod-search') ? document.getElementById('admin-mod-search').value : '').trim().toLowerCase();
+      const filtered = mods.filter(m => {
+        if (!search) return true;
+        return m.name.toLowerCase().includes(search);
+      });
+
+      const list = document.getElementById('mods-list');
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="p-8 text-center text-sm text-slate-400 font-medium">No moderators found.</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(m => {
+        const count = posts.filter(p => p.authorId === m.id).length;
+        const initials = m.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+        return `
+          <div class="px-6 py-4 flex flex-wrap items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-slate-900 to-indigo-950 text-indigo-300 font-black text-xs flex items-center justify-center shrink-0 border border-slate-800">
+                ${escapeHtml(initials)}
+              </div>
+              <div>
+                <div class="font-black text-sm text-slate-900 dark:text-white">${escapeHtml(m.name)}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                  ${count} submission${count === 1 ? '' : 's'} recorded
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openResetModal('${m.id}', '${escapeHtml(m.name)}')"
+                class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer transition">
+                Reset Password
+              </button>
+              <button onclick="removeModerator('${m.id}')"
+                class="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-xs font-bold text-rose-700 dark:text-rose-300 cursor-pointer transition">
+                Remove
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function removeModerator(modId) {
+      const mod = AppState.users.find(u => u.id === modId);
+      if (!mod) return;
+      if (!confirm(`Are you sure you want to remove ${mod.name}? They will no longer be able to log in.`)) return;
+
+      if (AppState.firebaseReady && rtdb) {
+        rtdb.ref(`users/${modId}`).remove().then(() => {
+          showToast(`${mod.name} removed from Firebase`);
+        });
+      } else {
+        AppState.users = AppState.users.filter(u => u.id !== modId);
+        localStorage.setItem(LOCAL_KEYS.USERS, JSON.stringify(AppState.users));
+        showToast(`${mod.name} removed`);
+        populateModDropdown();
+        renderModerators();
+      }
+    }
+
+    // Reset Password Modal
+    function openResetModal(id, name) {
+      document.getElementById('reset-mod-id').value = id;
+      document.getElementById('reset-mod-label').textContent = `Set a new password for ${name}.`;
+      document.getElementById('reset-mod-pass').value = '';
+      document.getElementById('reset-mod-modal').classList.remove('hidden');
+    }
+
+    function closeResetModal() {
+      document.getElementById('reset-mod-modal').classList.add('hidden');
+    }
+
+    document.getElementById('reset-mod-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('reset-mod-id').value;
+      const newPass = document.getElementById('reset-mod-pass').value;
+      const mod = AppState.users.find(u => u.id === id);
+
+      if (mod) {
+        if (AppState.firebaseReady && rtdb) {
+          rtdb.ref(`users/${id}/password`).set(newPass).then(() => {
+            showToast(`Password updated for ${mod.name}`);
+          });
+        } else {
+          mod.password = newPass;
+          localStorage.setItem(LOCAL_KEYS.USERS, JSON.stringify(AppState.users));
+          showToast(`Password updated for ${mod.name}`);
+        }
+      }
+      closeResetModal();
+    });
+
+    // Change Own Password
+    function openPasswordModal() {
+      document.getElementById('change-password-form').reset();
+      document.getElementById('cp-error').classList.add('hidden');
+      document.getElementById('password-modal').classList.remove('hidden');
+    }
+
+    function closePasswordModal() {
+      document.getElementById('password-modal').classList.add('hidden');
+    }
+
+    document.getElementById('change-password-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const current = document.getElementById('cp-current').value;
+      const next = document.getElementById('cp-new').value;
+      const confirmPass = document.getElementById('cp-confirm').value;
+      const errEl = document.getElementById('cp-error');
+
+      const user = getCurrentUser();
+      if (!user) return;
+
+      if (user.password !== current) {
+        errEl.textContent = 'Current password is incorrect.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (next !== confirmPass) {
+        errEl.textContent = 'New passwords do not match.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (next.length < 3) {
+        errEl.textContent = 'Password must be at least 3 characters.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      if (AppState.firebaseReady && rtdb) {
+        rtdb.ref(`users/${user.id}/password`).set(next).then(() => {
+          showToast('Password updated successfully on cloud!');
+        });
+      } else {
+        user.password = next;
+        localStorage.setItem(LOCAL_KEYS.USERS, JSON.stringify(AppState.users));
+        showToast('Password updated successfully!');
+      }
+
+      closePasswordModal();
+    });
+
+    // Handle responsive navbar adjustments strictly for admin
+    window.addEventListener('resize', () => {
+      const user = getCurrentUser();
+      const isAdmin = user && user.role === 'admin';
+      const adminNav = document.getElementById('admin-nav-tabs');
+      const adminMobNav = document.getElementById('admin-mob-nav-tabs');
+      if (adminNav) adminNav.style.display = isAdmin && window.innerWidth >= 768 ? 'flex' : 'none';
+      if (adminMobNav) adminMobNav.style.display = isAdmin && window.innerWidth < 768 ? 'flex' : 'none';
+    });
+
+    // Initialize Theme Icons and Firebase Sync
+    updateThemeIcons();
+    setupFirebaseSync();
+  </script>
+</body>
+</html>
